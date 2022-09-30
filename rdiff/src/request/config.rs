@@ -16,6 +16,7 @@ pub struct Request {
     port: u16,
     method: String,
     param: String,
+    req: String,
 }
 
 impl Config {
@@ -39,9 +40,11 @@ impl Config {
                 request.method = args.method.clone();
             }
 
-            match args.params.get(index) {
-                Some(param) => request.param = param.to_owned(),
-                None => request.param = args.params.first().unwrap().to_owned(),
+            if !args.params.is_empty() {
+                match args.params.get(index) {
+                    Some(param) => request.param = param.to_owned(),
+                    None => request.param = args.params.first().unwrap().to_owned(),
+                }
             }
         }
         Ok(config)
@@ -55,8 +58,8 @@ pub async fn get_response(request: Vec<Request>) -> Result<(String, String)> {
     let right = requests_iter.next().unwrap();
     let left_res = send_request(left).await?;
     let right_res = send_request(right).await?;
-    let left_res_str = left_res.get("status").unwrap().to_owned();
-    let right_res_str = right_res.get("status").unwrap().to_owned();
+    let left_res_str = left_res.get(&left.req).unwrap().to_owned();
+    let right_res_str = right_res.get(&right.req).unwrap().to_owned();
     Ok((left_res_str, right_res_str))
 }
 

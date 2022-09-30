@@ -1,9 +1,12 @@
+---
 requests:
   - base: http://127.0.0.1
     port: 8000
     method: get
     param: req1
+    req: status
   - base: http://127.0.0.1
     port: 8000
     method: get
     param: req2
+    req: status
