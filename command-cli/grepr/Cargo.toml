@@ -1,5 +1,5 @@
 [package]
-name = "cutr"
+name = "grepr"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,10 +8,11 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.65"
 clap = { version = "4.0.7", features = ["derive"] }
-csv = "1.1.6"
 regex = "1.6.0"
+sys-info = "0.9.1"
+walkdir = "2.3.2"
 
 [dev-dependencies]
-assert_cmd = "2.0.4"
-predicates = "2.1.1"
-rand = "0.8.5"
+assert_cmd = "2"
+predicates = "2"
+rand = "0.8"
