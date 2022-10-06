@@ -23,4 +23,4 @@ pgx crateを利用して、PostgreSQLのextensionを開発することできま�
 
 For more details, see:
 
-- [pgx_ex](https://github.com/wangxinyang/rust-p/tree/main/rdiff)
+- [pgx_ex](https://github.com/wangxinyang/rust-p/tree/main/pgx_ex)
