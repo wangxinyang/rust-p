@@ -14,3 +14,13 @@ Send HTTP request by parsing command line parameters or YAML files and compare t
 For more details, see:
 
 - [rdiff](https://github.com/wangxinyang/rust-p/tree/main/rdiff)
+
+
+> **pgx extension dev**
+
+pgx crateを利用して、PostgreSQLのextensionを開発することできます。
+
+
+For more details, see:
+
+- [pgx_ex](https://github.com/wangxinyang/rust-p/tree/main/rdiff)
