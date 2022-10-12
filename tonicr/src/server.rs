@@ -32,7 +32,7 @@ impl Chat for ChatService {
         info!("send message request: {info:?}");
         // store the send message request into something
         // how to publish the message??
-        let msg = info.to_get_msg_res(sender);
+        let _ = info.to_get_msg_res(sender);
         Ok(Response::new(SendMessageResponse {}))
     }
 
