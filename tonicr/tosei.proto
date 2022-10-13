@@ -18,7 +18,9 @@ message SendMessageRequest  {
 
 message SendMessageResponse{}
 
-message GetMessageRequest{}
+message GetMessageRequest{
+    string sender = 1;
+}
 
 message GetMessageResponse {
     string room = 1;

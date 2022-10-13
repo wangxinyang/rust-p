@@ -1,6 +1,10 @@
 # tonicr
 Rustのtonicを利用し、protoファイルを解析して、gRpcファイルに生成して、チャットのサーバ側とクライアント側を実現するのtonicrです。
 
+> Image
+
+![chat](https://s1.imagehub.cc/images/2022/10/13/chat.gif)
+
 
 
 > Proto
@@ -42,13 +46,3 @@ service Chat {
     rpc GetMessage(GetMessageRequest) returns (stream GetMessageResponse);
 }
 ```
-
-
-
-> Server
-
-![Server](https://s1.imagehub.cc/images/2022/10/12/2970543ce9794127c.png)
-
-
-
-> Client

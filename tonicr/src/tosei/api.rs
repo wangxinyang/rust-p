@@ -27,6 +27,8 @@ pub struct SendMessageResponse {
 #[derive(Eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GetMessageRequest {
+    #[prost(string, tag="1")]
+    pub sender: ::prost::alloc::string::String,
 }
 #[derive(Eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
