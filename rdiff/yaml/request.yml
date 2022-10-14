@@ -1,12 +1,29 @@
 ---
+todo:
+  request1:
+    url: http://127.0.0.1:8000
+    params:
+      a: 100
+  request2:
+    url: http://127.0.0.1:8000
+    params:
+      c: 200
+  response:
+    skip_headers:
+      - report
 requests:
-  - base: http://127.0.0.1
-    port: 8000
-    method: get
-    param: req1
-    req: status
-  - base: http://127.0.0.1
-    port: 8000
-    method: get
-    param: req2
-    req: status
+  request1:
+    method: GET
+    url: http://127.0.0.1:8000
+    headers:
+      user-agent: Aloha
+    params:
+      hello: world
+  request2:
+    method: GET
+    url: http://127.0.0.1:8000
+    params: {}
+  response:
+    skip_headers:
+      - set-cookie
+      - date
