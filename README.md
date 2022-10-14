@@ -1,7 +1,5 @@
 # rust-p
-Rust practice
-
-
+Rust multi practice
 
 
 
@@ -37,4 +35,15 @@ Tonic crateとgRpcを利用して、チャットサービスをじつげんす�
 For more details, see:
 
 - [tonicr](https://github.com/wangxinyang/rust-p/tree/main/tonicr)
+
+
+
+> **arc-swap-coding**
+
+arc-swapでプロジェクトの配置データをHot Deployすることができます。
+
+
+For more details, see:
+
+- [**arc-swap-coding**](https://github.com/wangxinyang/rust-p/tree/main/arc-swap-coding)
 

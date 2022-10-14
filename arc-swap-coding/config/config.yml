@@ -1,0 +1,7 @@
+---
+network:
+  addr: 127.0.0.1
+  port: 3200
+features:
+  font_size: 300
+  font_color: red
