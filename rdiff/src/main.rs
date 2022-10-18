@@ -1,66 +1,32 @@
-mod command;
-mod request;
-
-use std::fmt;
-
-use anyhow::{Ok, Result};
-use console::{style, Style};
-use request::{get_response, Config};
-use similar::{ChangeTag, TextDiff};
-
-struct Line(Option<usize>);
-
-impl fmt::Display for Line {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.0 {
-            None => write!(f, "    "),
-            Some(idx) => write!(f, "{:<4}", idx + 1),
-        }
-    }
-}
+use anyhow::{anyhow, Ok, Result};
+use clap::Parser;
+use rdiff::{Commands, DiffCli, DiffConfig, ExtraConfigs, RunArgs};
+use tokio::fs;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // get config
-    let config = Config::new("yaml/request.yml")?;
+    let config = DiffCli::parse();
+    match config.command {
+        Commands::Add(args) => run(args).await?,
+        _ => panic!("Invalid command"),
+    };
+    Ok(())
+}
 
-    println!("{:?}", config);
+async fn run(args: RunArgs) -> Result<()> {
+    let config_str = fs::read_to_string(args.config).await?;
+    let config: DiffConfig = serde_yaml::from_str(&config_str)?;
 
-    // get diff contents
-    let (old, new) = get_response(config.requests).await?;
+    let profile = config.get_profiles(&args.profile).ok_or_else(|| {
+        anyhow!(
+            "Profile {} not found in config file {}",
+            args.profile,
+            config_str
+        )
+    })?;
 
-    // diff response
-    let diff = TextDiff::from_lines(&old, &new);
-    for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
-        if idx > 0 {
-            println!("{:-^1$}", "----", 180);
-        }
-        for op in group {
-            for change in diff.iter_inline_changes(op) {
-                let (sign, s) = match change.tag() {
-                    ChangeTag::Delete => ("-", Style::new().red()),
-                    ChangeTag::Insert => ("+", Style::new().green()),
-                    ChangeTag::Equal => (" ", Style::new().dim()),
-                };
-                print!(
-                    "{}{} |{}",
-                    style(Line(change.old_index())).dim(),
-                    style(Line(change.new_index())).dim(),
-                    s.apply_to(sign).bold(),
-                );
-                for (emphasized, value) in change.iter_strings_lossy() {
-                    if emphasized {
-                        print!("{}", s.apply_to(value).underlined().on_black());
-                    } else {
-                        print!("{}", s.apply_to(value));
-                    }
-                }
-                if change.missing_newline() {
-                    println!();
-                }
-            }
-        }
-    }
-
+    let extra_args: ExtraConfigs = args.extra_args.into();
+    profile.diff(extra_args).await?;
     Ok(())
 }
