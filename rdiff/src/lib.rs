@@ -8,7 +8,7 @@ pub use self::config::*;
 pub use self::req::*;
 pub use utils::diff_text;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ExtraConfigs {
     headers: Vec<(String, String)>,
     body: Vec<(String, String)>,
