@@ -1,5 +1,16 @@
-mod command;
-mod request;
+mod cli;
+mod config;
+mod req;
+mod utils;
 
-pub use self::command::*;
-pub use self::request::*;
+pub use self::cli::*;
+pub use self::config::*;
+pub use self::req::*;
+pub use utils::diff_text;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtraConfigs {
+    headers: Vec<(String, String)>,
+    body: Vec<(String, String)>,
+    query: Vec<(String, String)>,
+}

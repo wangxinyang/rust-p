@@ -6,25 +6,15 @@ Send HTTP request by parsing command line parameters or YAML files and compare t
 > Command
 
 ```
-rdiff -h
+rdiff add -h 
 
-diff http response from two request
-
-Usage: rdiff [OPTIONS]
+Usage: rdiff add [OPTIONS] --config <CONFIG> --profile <PROFILE>
 
 Options:
-  -b, --base <BASE>
-          url base
-  -p, --ports <PORTS>...
-          url port [default: 8100]
-  -m, --method <METHOD>
-          http method [default: get]
-  -c, --params <PARAMS>...
-          http params
-  -h, --help
-          Print help information (use `--help` for more detail)
-  -V, --version
-          Print version information
+  -c, --config <CONFIG>          Config file path
+  -p, --profile <PROFILE>        Profile in file
+  -e, --extra-args <EXTRA_ARGS>  for query params, use `-e key=value` for headers, use `-e %key=value` for body,, use `-e @key=value`
+  -h, --help                     Print help information
 ```
 
 
@@ -32,27 +22,53 @@ Options:
 > YAML
 
 ```request.yml
-requests:
-  - base: http://127.0.0.1
-    port: 8000
-    method: get
-    param: req1
-  - base: http://127.0.0.1
-    port: 8000
-    method: get
-    param: req2
+---
+todo:
+  request1:
+    url: http://127.0.0.1:8100
+    params:
+      a: 100
+  request2:
+    url: http://127.0.0.1:8100
+    params:
+      c: 200
+  response:
+    skip_headers:
+      - report
+rust:
+  request1:
+    method: GET
+    url: http://127.0.0.1:8100/req_r1
+    headers:
+      user-agent: Aloha
+    params:
+      hello: world
+  request2:
+    method: GET
+    url: http://127.0.0.1:8100/req_r2
+    params: {}
+  response:
+    skip_headers:
+      - set-cookie
+      - date
+
 
 
 ```
 
 
 
-> Result
+> Run
+
+**rdiff add -c yaml/request.yml -p rust -e a=100**
 
 ```
--Hello, this is req1 response by rust command1
-+Hello, this is req2 response by rust command2
+1   1    | HTTP/1.1 200 OK
+2   2    | content-type: "application/json; charset=utf-8"content-length: "58"
+3   3    | {
+4        |-  "status": "Hello, this is req1 response by rust command1"
+    4    |+  "status": "Hello, this is req2 response by rust command2"
+5   5    | }
 ```
-<img width="1395" alt="image" src="https://user-images.githubusercontent.com/11283532/193224470-fc3e3a1f-a445-4e9f-8d87-94aa3e846d43.png">
-
+<img width="1395" alt="image" src="https://s1.imagehub.cc/images/2022/10/19/1325a811388db5d27.png">
 

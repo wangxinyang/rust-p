@@ -1,8 +1,9 @@
 use anyhow::Result;
-use rdiff::Config;
+use rdiff::DiffConfig;
 
 fn main() -> Result<()> {
-    let config = Config::new("yaml/request.yml")?;
+    let confi_str = include_str!("../yaml/request.yml");
+    let config: DiffConfig = serde_yaml::from_str(confi_str)?;
     println!("{:#?}", config);
     Ok(())
 }
