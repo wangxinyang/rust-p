@@ -15,6 +15,9 @@ pub struct DiffCli {
 pub enum Commands {
     /// Additional another cmd args
     Add(RunArgs),
+
+    /// Parse user input to create DiffConfig
+    Parse,
 }
 
 #[derive(Parser, Debug)]

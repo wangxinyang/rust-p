@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Ok, Result};
 use http::{
     header::{self, HeaderName},
     HeaderMap, HeaderValue, Method,
@@ -19,7 +19,7 @@ pub struct RequestProfile {
     #[serde(with = "http_serde::method", default)]
     pub method: Method,
 
-    #[serde(skip_serializing_if = "Option::is_none", default)]
+    #[serde(skip_serializing_if = "empty_json_value", default)]
     pub params: Option<serde_json::Value>,
 
     #[serde(
@@ -35,7 +35,34 @@ pub struct RequestProfile {
 
 pub struct ResponseExt(Response);
 
+impl ResponseExt {
+    pub fn get_response_headers(&self) -> Result<Vec<String>> {
+        let res_headers = self.0.headers();
+        let mut headers = Vec::new();
+        for header_item in res_headers.keys() {
+            headers.push(header_item.to_string());
+        }
+        Ok(headers)
+    }
+}
+
 impl RequestProfile {
+    pub fn new(
+        url: Url,
+        method: Method,
+        params: Option<serde_json::Value>,
+        headers: HeaderMap,
+        body: Option<serde_json::Value>,
+    ) -> Self {
+        Self {
+            url,
+            method,
+            params,
+            headers,
+            body,
+        }
+    }
+
     pub async fn send(&self, args: &ExtraConfigs) -> Result<ResponseExt> {
         let (headers, query, body) = self.generated(args)?;
         let client = Client::new();
@@ -109,6 +136,26 @@ impl RequestProfile {
     }
 }
 
+impl FromStr for RequestProfile {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parsed_url = Url::parse(s)?;
+        let qs = parsed_url.query_pairs();
+        let mut params = json!({});
+        for (k, v) in qs {
+            params[&*k] = v.parse()?;
+        }
+        Ok(RequestProfile::new(
+            parsed_url,
+            Method::GET,
+            Some(params),
+            HeaderMap::new(),
+            None,
+        ))
+    }
+}
+
 impl ResponseExt {
     pub async fn get_text(self, profile: &ResponseProfile) -> Result<String> {
         let res = self.0;
@@ -165,4 +212,11 @@ fn filter_json(text: &str, skip_body: &[String]) -> Result<String> {
         }
     }
     Ok(serde_json::to_string_pretty(&json)?)
+}
+
+/// if params is empty, skip serialize
+fn empty_json_value(v: &Option<serde_json::Value>) -> bool {
+    v.as_ref().map_or(true, |v| {
+        v.is_null() || (v.is_object() && v.as_object().unwrap().is_empty())
+    })
 }

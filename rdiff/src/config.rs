@@ -10,6 +10,10 @@ pub struct DiffConfig {
 }
 
 impl DiffConfig {
+    pub fn new(profiles: HashMap<String, DiffProfile>) -> Self {
+        Self { profiles }
+    }
+
     pub fn load_yaml_config(path: &str) -> Result<DiffConfig> {
         let config: DiffConfig = serde_yaml::from_str(path)?;
         config.validate()?;
@@ -42,16 +46,19 @@ fn is_default<T: Default + PartialEq>(v: &T) -> bool {
     v == &T::default()
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
-pub struct ResponseProfile {
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub skip_headers: Vec<String>,
-
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub skip_body: Vec<String>,
-}
-
 impl DiffProfile {
+    pub fn new(
+        request1: RequestProfile,
+        request2: RequestProfile,
+        response: ResponseProfile,
+    ) -> Self {
+        Self {
+            request1,
+            request2,
+            response,
+        }
+    }
+
     pub async fn diff(&self, args: ExtraConfigs) -> Result<String> {
         let res1 = self.request1.send(&args).await?;
         let res2 = self.request2.send(&args).await?;
@@ -70,5 +77,23 @@ impl DiffProfile {
             .validate()
             .context("request2 failed to validate")?;
         Ok(())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct ResponseProfile {
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub skip_headers: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub skip_body: Vec<String>,
+}
+
+impl ResponseProfile {
+    pub fn new(skip_headers: Vec<String>, skip_body: Vec<String>) -> Self {
+        Self {
+            skip_headers,
+            skip_body,
+        }
     }
 }
