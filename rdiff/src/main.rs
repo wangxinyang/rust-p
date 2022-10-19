@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Ok, Result};
 use clap::Parser;
 use rdiff::{Commands, DiffCli, DiffConfig, ExtraConfigs, RunArgs};
+use std::io::Write;
 use tokio::fs;
 
 #[tokio::main]
@@ -27,6 +28,10 @@ async fn run(args: RunArgs) -> Result<()> {
     })?;
 
     let extra_args: ExtraConfigs = args.extra_args.into();
-    profile.diff(extra_args).await?;
+    let output = profile.diff(extra_args).await?;
+
+    let mut stdout = std::io::stdout().lock();
+    write!(stdout, "{}", output)?;
+
     Ok(())
 }

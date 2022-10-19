@@ -16,6 +16,10 @@ For more details, see:
 
 
 
+
+
+
+
 > **pgx extension dev**
 
 pgx crateを利用して、PostgreSQLのextensionを開発することできます。
@@ -27,6 +31,10 @@ For more details, see:
 
 
 
+
+
+
+
 > **tonicr**
 
 Tonic crateとgRpcを利用して、チャットサービスをじつげんする。
@@ -35,6 +43,10 @@ Tonic crateとgRpcを利用して、チャットサービスをじつげんす�
 For more details, see:
 
 - [tonicr](https://github.com/wangxinyang/rust-p/tree/main/tonicr)
+
+
+
+
 
 
 

@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
 use anyhow::{Ok, Result};
-use http::{HeaderMap, Method};
-use serde::{Deserialize, Serialize};
-use url::Url;
 
-use crate::ExtraConfigs;
+use serde::{Deserialize, Serialize};
+
+use crate::{diff_text, ExtraConfigs, RequestProfile};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DiffConfig {
@@ -27,39 +26,22 @@ pub struct DiffProfile {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RequestProfile {
-    url: Url,
-
-    #[serde(with = "http_serde::method", default)]
-    method: Method,
-
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    params: Option<serde_json::Value>,
-
-    #[serde(
-        with = "http_serde::header_map",
-        skip_serializing_if = "HeaderMap::is_empty",
-        default
-    )]
-    headers: HeaderMap,
-
-    #[serde(skip_serializing_if = "Option::is_none", default)]
-    body: Option<serde_json::Value>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct ResponseProfile {
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    skip_headers: Vec<String>,
+    pub skip_headers: Vec<String>,
 
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    skip_body: Vec<String>,
+    pub skip_body: Vec<String>,
 }
 
 impl DiffProfile {
-    pub async fn diff(&self, _args: ExtraConfigs) -> Result<()> {
-        println!("{:?}", self);
-        println!("{:?}", _args);
-        Ok(())
+    pub async fn diff(&self, args: ExtraConfigs) -> Result<String> {
+        let res1 = self.request1.send(&args).await?;
+        let res2 = self.request2.send(&args).await?;
+
+        let text1 = res1.get_text(&self.response).await?;
+        let text2 = res2.get_text(&self.response).await?;
+
+        Ok(diff_text(&text1, &text2)?)
     }
 }

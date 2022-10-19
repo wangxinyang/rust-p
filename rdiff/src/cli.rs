@@ -27,6 +27,9 @@ pub struct RunArgs {
     #[arg(short, long)]
     pub profile: String,
 
+    /// for query params, use `-e key=value`
+    /// for headers, use `-e %key=value`
+    /// for body,, use `-e @key=value`
     #[arg(short, long, value_parser = parse_extra_args, num_args = 1)]
     pub extra_args: Vec<KeyVal>,
 }
