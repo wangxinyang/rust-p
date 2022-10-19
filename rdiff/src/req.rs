@@ -136,15 +136,12 @@ fn get_content_type(headers: &HeaderMap) -> Option<String> {
 // why Vec<String> -> [String]??
 fn filter_json(text: &str, skip_body: &[String]) -> Result<String> {
     let mut json: serde_json::Value = serde_json::from_str(text)?;
-    match json {
-        serde_json::Value::Object(ref mut obj) => {
-            for k in skip_body {
-                obj.remove(k);
-            }
+    // for now just ignore non-object values
+    // in future support array of objects
+    if let serde_json::Value::Object(ref mut obj) = json {
+        for k in skip_body {
+            obj.remove(k);
         }
-        _ =>
-            // TODO: support array
-            {}
     }
     Ok(serde_json::to_string_pretty(&json)?)
 }
