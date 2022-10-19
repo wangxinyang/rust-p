@@ -14,23 +14,23 @@ use crate::{ExtraConfigs, ResponseProfile};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RequestProfile {
-    url: Url,
+    pub url: Url,
 
     #[serde(with = "http_serde::method", default)]
-    method: Method,
+    pub method: Method,
 
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    params: Option<serde_json::Value>,
+    pub params: Option<serde_json::Value>,
 
     #[serde(
         with = "http_serde::header_map",
         skip_serializing_if = "HeaderMap::is_empty",
         default
     )]
-    headers: HeaderMap,
+    pub headers: HeaderMap,
 
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    body: Option<serde_json::Value>,
+    pub body: Option<serde_json::Value>,
 }
 
 pub struct ResponseExt(Response);
@@ -85,6 +85,27 @@ impl RequestProfile {
             }
             _ => Err(anyhow!("unsupported content type")),
         }
+    }
+
+    /// check request parameters of the yaml file
+    pub fn validate(&self) -> Result<()> {
+        if let Some(params) = &self.params {
+            if !params.is_object() {
+                return Err(anyhow!(
+                    "Params must be an object but got\n{}",
+                    serde_yaml::to_string(params)?
+                ));
+            }
+        }
+        if let Some(body) = &self.body {
+            if !body.is_object() {
+                return Err(anyhow!(
+                    "Body must be an object but got\n{}",
+                    serde_yaml::to_string(body)?
+                ));
+            }
+        }
+        Ok(())
     }
 }
 

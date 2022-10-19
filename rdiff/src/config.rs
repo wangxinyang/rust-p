@@ -1,10 +1,7 @@
-use std::collections::HashMap;
-
-use anyhow::{Ok, Result};
-
-use serde::{Deserialize, Serialize};
-
 use crate::{diff_text, ExtraConfigs, RequestProfile};
+use anyhow::{Context, Ok, Result};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DiffConfig {
@@ -13,8 +10,23 @@ pub struct DiffConfig {
 }
 
 impl DiffConfig {
+    pub fn load_yaml_config(path: &str) -> Result<DiffConfig> {
+        let config: DiffConfig = serde_yaml::from_str(path)?;
+        config.validate()?;
+        Ok(config)
+    }
+
     pub fn get_profiles(&self, key: &str) -> Option<&DiffProfile> {
         self.profiles.get(key)
+    }
+
+    fn validate(&self) -> Result<()> {
+        for (key, profile) in &self.profiles {
+            profile
+                .validate()
+                .context(format!("failed to validate profile: {}", key))?;
+        }
+        Ok(())
     }
 }
 
@@ -22,10 +34,15 @@ impl DiffConfig {
 pub struct DiffProfile {
     request1: RequestProfile,
     request2: RequestProfile,
+    #[serde(skip_serializing_if = "is_default", default)]
     response: ResponseProfile,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+fn is_default<T: Default + PartialEq>(v: &T) -> bool {
+    v == &T::default()
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ResponseProfile {
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub skip_headers: Vec<String>,
@@ -43,5 +60,15 @@ impl DiffProfile {
         let text2 = res2.get_text(&self.response).await?;
 
         diff_text(&text1, &text2)
+    }
+
+    fn validate(&self) -> Result<()> {
+        self.request1
+            .validate()
+            .context("request1 failed to validate")?;
+        self.request2
+            .validate()
+            .context("request2 failed to validate")?;
+        Ok(())
     }
 }

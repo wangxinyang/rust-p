@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
 
 async fn run(args: RunArgs) -> Result<()> {
     let config_str = fs::read_to_string(args.config).await?;
-    let config: DiffConfig = serde_yaml::from_str(&config_str)?;
+    let config: DiffConfig = DiffConfig::load_yaml_config(&config_str)?;
 
     let profile = config.get_profiles(&args.profile).ok_or_else(|| {
         anyhow!(
