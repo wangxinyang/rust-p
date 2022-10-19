@@ -2,8 +2,8 @@ use anyhow::{anyhow, Ok, Result};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input, MultiSelect};
 use rdiff::{
-    Commands, DiffCli, DiffConfig, DiffProfile, ExtraConfigs, RequestProfile, ResponseProfile,
-    RunArgs,
+    highlighting_text, Commands, DiffCli, DiffConfig, DiffProfile, ExtraConfigs, RequestProfile,
+    ResponseProfile, RunArgs,
 };
 use std::io::Write;
 use tokio::fs;
@@ -71,7 +71,8 @@ async fn parse() -> Result<()> {
     let diff_profile = DiffProfile::new(request1, request2, response);
     let config = DiffConfig::new(vec![(name, diff_profile)].into_iter().collect());
     let result = serde_yaml::to_string(&config)?;
+
     let mut stdout = std::io::stdout().lock();
-    write!(&mut stdout, "----\n{}", result)?;
+    write!(&mut stdout, "----\n{}", highlighting_text(&result, "yaml")?)?;
     Ok(())
 }
