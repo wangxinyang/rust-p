@@ -11,7 +11,7 @@ Send HTTP request by parsing command line parameters or YAML files and compare t
 
 For more details, see:
 
-- [rdiff](https://github.com/wangxinyang/rust-p/tree/main/rdiff)
+- [rdiff]([https://github.com/wangxinyang/rdiff](https://github.com/wangxinyang/rdiff))
 
 
 
