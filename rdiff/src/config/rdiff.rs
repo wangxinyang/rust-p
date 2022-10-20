@@ -1,3 +1,4 @@
+use super::{LoadConfig, ValidateConfig};
 use crate::{diff_text, ExtraConfigs, RequestProfile};
 use anyhow::{Context, Ok, Result};
 use serde::{Deserialize, Serialize};
@@ -9,21 +10,9 @@ pub struct DiffConfig {
     profiles: HashMap<String, DiffProfile>,
 }
 
-impl DiffConfig {
-    pub fn new(profiles: HashMap<String, DiffProfile>) -> Self {
-        Self { profiles }
-    }
+impl LoadConfig for DiffConfig {}
 
-    pub fn load_yaml_config(path: &str) -> Result<DiffConfig> {
-        let config: DiffConfig = serde_yaml::from_str(path)?;
-        config.validate()?;
-        Ok(config)
-    }
-
-    pub fn get_profiles(&self, key: &str) -> Option<&DiffProfile> {
-        self.profiles.get(key)
-    }
-
+impl ValidateConfig for DiffConfig {
     fn validate(&self) -> Result<()> {
         for (key, profile) in &self.profiles {
             profile
@@ -31,6 +20,16 @@ impl DiffConfig {
                 .context(format!("failed to validate profile: {}", key))?;
         }
         Ok(())
+    }
+}
+
+impl DiffConfig {
+    pub fn new(profiles: HashMap<String, DiffProfile>) -> Self {
+        Self { profiles }
+    }
+
+    pub fn get_profiles(&self, key: &str) -> Option<&DiffProfile> {
+        self.profiles.get(key)
     }
 }
 
@@ -68,7 +67,9 @@ impl DiffProfile {
 
         diff_text(&text1, &text2)
     }
+}
 
+impl ValidateConfig for DiffProfile {
     fn validate(&self) -> Result<()> {
         self.request1
             .validate()
