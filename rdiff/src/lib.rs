@@ -1,11 +1,12 @@
 mod cli;
 mod config;
-mod req;
 mod utils;
 
 pub use self::cli::*;
-pub use self::config::*;
-pub use self::req::*;
+pub use config::{
+    get_body_text, get_header_text, get_status_text, DiffConfig, DiffProfile, LoadConfig,
+    RequestConfig, RequestProfile, ResponseProfile,
+};
 pub use utils::{diff_text, highlighting_text};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]

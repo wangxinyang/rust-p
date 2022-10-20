@@ -1,0 +1,29 @@
+---
+todo:
+  request1:
+    url: http://127.0.0.1:8100
+    params:
+      a: 100
+  request2:
+    url: http://127.0.0.1:8100
+    params:
+      c: 200
+  response:
+    skip_headers:
+      - report
+rust:
+  request1:
+    method: GET
+    url: http://127.0.0.1:8100/req_r1
+    headers:
+      user-agent: Aloha
+    params:
+      hello: world
+  request2:
+    method: GET
+    url: http://127.0.0.1:8100/req_r2
+    params: {}
+  response:
+    skip_headers:
+      - set-cookie
+      - date

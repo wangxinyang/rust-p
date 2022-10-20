@@ -2,11 +2,10 @@ use anyhow::{anyhow, Ok, Result};
 use clap::Parser;
 use dialoguer::{theme::ColorfulTheme, Input, MultiSelect};
 use rdiff::{
-    highlighting_text, Commands, DiffCli, DiffConfig, DiffProfile, ExtraConfigs, RequestProfile,
-    ResponseProfile, RunArgs,
+    highlighting_text, Commands, DiffCli, DiffConfig, DiffProfile, ExtraConfigs, LoadConfig,
+    RequestProfile, ResponseProfile, RunArgs,
 };
 use std::io::Write;
-use tokio::fs;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -21,14 +20,14 @@ async fn main() -> Result<()> {
 }
 
 async fn run(args: RunArgs) -> Result<()> {
-    let config_str = fs::read_to_string(args.config).await?;
-    let config: DiffConfig = DiffConfig::load_yaml_config(&config_str)?;
+    let config_file = args.config.unwrap_or_else(|| "./rdiff.yml".to_string());
+    let config: DiffConfig = DiffConfig::load_yaml_config(&config_file).await?;
 
     let profile = config.get_profiles(&args.profile).ok_or_else(|| {
         anyhow!(
             "Profile {} not found in config file {}",
             args.profile,
-            config_str
+            config_file
         )
     })?;
 

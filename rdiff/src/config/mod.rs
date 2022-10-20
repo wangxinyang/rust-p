@@ -1,16 +1,44 @@
+mod rdiff;
+mod rreq;
+
+use crate::ExtraConfigs;
 use anyhow::{anyhow, Ok, Result};
+use async_trait::async_trait;
 use http::{
     header::{self, HeaderName},
     HeaderMap, HeaderValue, Method,
 };
 use reqwest::{Client, Response};
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::Write;
 use std::str::FromStr;
+use tokio::fs;
 use url::Url;
 
-use crate::{ExtraConfigs, ResponseProfile};
+pub use rdiff::{DiffConfig, DiffProfile, ResponseProfile};
+pub use rreq::*;
+
+#[async_trait]
+pub trait LoadConfig
+where
+    Self: Sized + DeserializeOwned + ValidateConfig,
+{
+    async fn load_yaml_config(path: &str) -> Result<Self> {
+        let content = fs::read_to_string(path).await?;
+        Self::from_yarml(&content)
+    }
+
+    fn from_yarml(content: &str) -> Result<Self> {
+        let config: Self = serde_yaml::from_str(content)?;
+        config.validate()?;
+        Ok(config)
+    }
+}
+
+pub trait ValidateConfig {
+    fn validate(&self) -> Result<()>;
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RequestProfile {
@@ -33,9 +61,14 @@ pub struct RequestProfile {
     pub body: Option<serde_json::Value>,
 }
 
+#[derive(Debug)]
 pub struct ResponseExt(Response);
 
 impl ResponseExt {
+    pub fn into_inner(self) -> Response {
+        self.0
+    }
+
     pub fn get_response_headers(&self) -> Result<Vec<String>> {
         let res_headers = self.0.headers();
         let mut headers = Vec::new();
@@ -63,6 +96,16 @@ impl RequestProfile {
         }
     }
 
+    pub fn get_url(&self, args: &ExtraConfigs) -> Result<String> {
+        let (_, query, _) = self.generated(args)?;
+        let mut url = self.url.clone();
+        if !query.as_object().unwrap().is_empty() {
+            let query = serde_qs::to_string(&query)?;
+            url.set_query(Some(&query));
+        }
+        Ok(url.to_string())
+    }
+
     pub async fn send(&self, args: &ExtraConfigs) -> Result<ResponseExt> {
         let (headers, query, body) = self.generated(args)?;
         let client = Client::new();
@@ -76,7 +119,7 @@ impl RequestProfile {
         Ok(ResponseExt(res))
     }
 
-    pub fn generated(&self, args: &ExtraConfigs) -> Result<(HeaderMap, serde_json::Value, String)> {
+    fn generated(&self, args: &ExtraConfigs) -> Result<(HeaderMap, serde_json::Value, String)> {
         let mut headers = self.headers.clone();
         let mut query = self.params.clone().unwrap_or_else(|| json!({}));
         let mut body = self.body.clone().unwrap_or_else(|| json!({}));
@@ -140,14 +183,15 @@ impl FromStr for RequestProfile {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parsed_url = Url::parse(s)?;
-        let qs = parsed_url.query_pairs();
+        let mut url = Url::parse(s)?;
+        let qs = url.query_pairs();
         let mut params = json!({});
         for (k, v) in qs {
             params[&*k] = v.parse()?;
         }
+        url.set_query(None);
         Ok(RequestProfile::new(
-            parsed_url,
+            url,
             Method::GET,
             Some(params),
             HeaderMap::new(),
@@ -159,39 +203,54 @@ impl FromStr for RequestProfile {
 impl ResponseExt {
     pub async fn get_text(self, profile: &ResponseProfile) -> Result<String> {
         let res = self.0;
+        let mut output = get_status_text(&res)?;
+
         // get header content
-        let mut output = get_header_text(&res, &profile.skip_headers)?;
+        write!(
+            &mut output,
+            "{}",
+            get_header_text(&res, &profile.skip_headers)?
+        )?;
 
-        // this is must return String not &str, because if return the &str,
-        // the &str lifetime as long as res.headers's lifetime
-        let content_type = get_content_type(res.headers());
-
-        // casuse the error [move out of `res` occurs here]
-        let text = res.text().await?;
-
-        match content_type.as_deref() {
-            Some("application/json") => {
-                let text = filter_json(&text, &profile.skip_body)?;
-                writeln!(&mut output, "{}", &text)?;
-            }
-            _ => writeln!(&mut output, "{}", &text)?,
-        }
+        // get body content
+        write!(
+            &mut output,
+            "{}",
+            get_body_text(res, &profile.skip_body).await?
+        )?;
         Ok(output)
     }
 }
 
-fn get_header_text(res: &Response, skip_headers: &[String]) -> Result<String> {
+pub fn get_status_text(res: &Response) -> Result<String> {
+    Ok(format!("{:?} {}\n", res.version(), res.status()))
+}
+
+pub fn get_header_text(res: &Response, skip_headers: &[String]) -> Result<String> {
     let mut output = String::new();
-    writeln!(&mut output, "{:?} {}", res.version(), res.status())?;
     let headers = res.headers();
     for (key, value) in headers.iter() {
         if !skip_headers.iter().any(|sh| sh == key.as_str()) {
-            output.push_str(&format!("{}: {:?}", key, value));
+            writeln!(&mut output, "{}: {:?}", key, value)?;
         }
     }
     writeln!(&mut output)?;
 
     Ok(output)
+}
+
+pub async fn get_body_text(res: Response, skip_body: &[String]) -> Result<String> {
+    // this is must return String not &str, because if return the &str,
+    // the &str lifetime as long as res.headers's lifetime
+    let content_type = get_content_type(res.headers());
+
+    // casuse the error [move out of `res` occurs here]
+    let text = res.text().await?;
+
+    match content_type.as_deref() {
+        Some("application/json") => filter_json(&text, skip_body),
+        _ => Ok(text),
+    }
 }
 
 fn get_content_type(headers: &HeaderMap) -> Option<String> {

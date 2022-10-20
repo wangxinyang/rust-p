@@ -24,7 +24,7 @@ pub enum Commands {
 pub struct RunArgs {
     /// Config file path
     #[arg(short, long)]
-    pub config: String,
+    pub config: Option<String>,
 
     /// Profile in file
     #[arg(short, long)]
