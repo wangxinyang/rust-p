@@ -42,10 +42,14 @@ async fn run(args: RunArgs) -> Result<()> {
     let body = get_body_text(response, &[]).await?;
 
     let mut output = String::new();
-    writeln!(&mut output, "Url: {}\n", url)?;
-    write!(&mut output, "{}", version)?;
-    write!(&mut output, "{}", highlighting_text(&headers, "yaml")?)?;
-    write!(&mut output, "{}", highlighting_text(&body, "json")?)?;
+    if atty::is(atty::Stream::Stdout) {
+        writeln!(&mut output, "Url: {}\n", url)?;
+        write!(&mut output, "{}", version)?;
+        write!(&mut output, "{}", highlighting_text(&headers, "yaml")?)?;
+        write!(&mut output, "{}", highlighting_text(&body, "json")?)?;
+    } else {
+        write!(&mut output, "{}", body)?;
+    }
 
     let mut stdout = std::io::stdout().lock();
     write!(stdout, "{}", output)?;
@@ -67,6 +71,11 @@ async fn parse() -> Result<()> {
     let result = serde_yaml::to_string(&config)?;
 
     let mut stdout = std::io::stdout().lock();
-    write!(&mut stdout, "----\n{}", highlighting_text(&result, "yaml")?)?;
+    if atty::is(atty::Stream::Stdout) {
+        write!(&mut stdout, "----\n{}", highlighting_text(&result, "yaml")?)?;
+    } else {
+        write!(&mut stdout, "----\n{}", result)?;
+    }
+
     Ok(())
 }
