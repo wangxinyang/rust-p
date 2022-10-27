@@ -1,16 +1,18 @@
 use crate::{cli::Args, config::ContainerOpts, errors::Errcode};
 use anyhow::Result;
 use nix::sys::utsname::uname;
+use std::os::unix::prelude::RawFd;
 use tracing::{debug, error};
 
 pub struct Container {
     config: ContainerOpts,
+    sockets: (RawFd, RawFd),
 }
 
 impl Container {
     pub fn new(args: Args) -> Result<Container, Errcode> {
-        let config = ContainerOpts::new(args.command, args.uid, args.mount_dir);
-        Ok(Container { config })
+        let (config, sockets) = ContainerOpts::new(args.command, args.uid, args.mount_dir)?;
+        Ok(Container { config, sockets })
     }
 
     pub fn create(&self) -> Result<(), Errcode> {

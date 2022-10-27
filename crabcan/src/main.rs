@@ -1,10 +1,12 @@
 use crate::errors::exit_with_retcode;
 use tracing::{error, info};
 
+mod child;
 mod cli;
 mod config;
 mod container;
 mod errors;
+mod ipc;
 
 #[macro_use]
 extern crate scan_fmt;

@@ -7,6 +7,8 @@ pub enum Errcode {
     ArgumentInvalid(&'static str),
     NotSupported(u8),
     ContainerError(u8),
+    SocketError(u8),
+    ChildProcessError(u8),
 }
 
 impl Errcode {
@@ -22,6 +24,8 @@ impl Display for Errcode {
             Errcode::ArgumentInvalid(element) => write!(f, "ArgumentInvalid : {}", element),
             Errcode::ContainerError(element) => write!(f, "ContainerError : {}", element),
             Errcode::NotSupported(element) => write!(f, "NotSupported : {}", element),
+            Errcode::SocketError(element) => write!(f, "SocketError : {}", element),
+            Errcode::ChildProcessError(element) => write!(f, "ChildProcessError : {}", element),
             _ => write!(f, "{:?}", self), // For any variant not previously covered
         }
     }
