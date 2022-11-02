@@ -16,3 +16,4 @@ macro_define_crate ={path="./macro_define_crate"}
 xlsxwriter = "0.4.0"
 anyhow = "1.0.65"
 calc_engine = "0.4.1"
+tokio = { version = "1.21.2", features = ["full"] }
