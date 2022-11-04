@@ -1,38 +1,22 @@
 use std::{thread, time::Duration};
 
-#[tokio::main]
-async fn main() {
-    let hello = Hello::Started;
-    let result = hello.await;
-    println!("Result: {:?}", result);
+use futures::executor::block_on;
+
+async fn hello_world() {
+    hello_cat().await;
+    thread::sleep(Duration::from_secs(5));
+    println!("Hello, world!");
 }
 
-enum Hello {
-    Started,
-    Working,
-    _Done,
+async fn hello_cat() {
+    println!("Hello, cat!");
 }
 
-impl std::future::Future for Hello {
-    type Output = i32;
+fn main() {
+    let a = 10;
+    let b = 20;
+    let c = a;
 
-    fn poll(
-        self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Self::Output> {
-        let wake = cx.waker().clone();
-        let h = self.get_mut();
-        match h {
-            Hello::Started => {
-                *h = Hello::Working;
-                thread::sleep(Duration::from_secs(1));
-                wake.wake();
-                std::task::Poll::Pending
-            }
-            Hello::Working => std::task::Poll::Ready(110),
-            Hello::_Done => {
-                panic!("Not here");
-            }
-        }
-    }
+    let future = hello_world();
+    block_on(future);
 }
