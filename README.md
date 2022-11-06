@@ -72,3 +72,16 @@ For more details, see:
 
 - [**crabcan**](https://github.com/wangxinyang/rust-p/tree/main/crabcan)
 
+
+
+
+
+> **axumr**
+
+Write a example with Axum in Rust
+
+
+For more details, see:
+
+- [**axumr**](https://github.com/wangxinyang/rust-p/tree/main/axumr)
+

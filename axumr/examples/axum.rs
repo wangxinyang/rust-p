@@ -1,22 +1,34 @@
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc, Mutex,
+};
+
 use axum::{
     async_trait,
     extract::{FromRequest, RequestParts},
     headers::{authorization::Bearer, Authorization},
-    http,
-    response::{Html, IntoResponse},
+    http::{self, StatusCode},
+    response::IntoResponse,
     routing::{get, post},
-    Json, Router, TypedHeader,
+    Extension, Json, Router, TypedHeader,
 };
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
+static COUNTER: AtomicUsize = AtomicUsize::new(0);
+
 #[tokio::main]
 async fn main() {
+    let store = TodoStrore::default();
     // build our application with a route
     let app = Router::new()
         .route("/", get(index))
         .route("/login", post(login))
-        .route("/protected", post(protected));
+        .route("/create", post(todo_create).layer(Extension(store.clone())))
+        .route(
+            "/todo",
+            post(get_todo_infos).layer(Extension(store.clone())),
+        );
 
     println!("the server is running on http://127.0.0.1:8100");
     axum::Server::bind(&"127.0.0.1:8100".parse().unwrap())
@@ -47,10 +59,39 @@ async fn login(Json(request): Json<LoginRequest>) -> Json<String> {
     Json(token)
 }
 
-async fn protected(claims: Claims, Json(request): Json<ProtectedRequest>) -> Html<String> {
-    println!("claims: {:?}", claims);
-    println!("other: {:?}", request.test12);
-    Html("authorized".to_string())
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct Todo {
+    id: usize,
+    name: String,
+    done: bool,
+}
+
+#[derive(Default, Debug, Clone)]
+struct TodoStrore {
+    todos: Arc<Mutex<Vec<Todo>>>,
+}
+
+async fn todo_create(claims: Claims, state: Extension<TodoStrore>) -> Result<StatusCode, MyError> {
+    let store = state.0;
+    let todo = Todo {
+        id: get_id(),
+        name: claims.name,
+        done: false,
+    };
+    store.todos.lock().unwrap().push(todo);
+    Ok(StatusCode::CREATED)
+}
+
+fn get_id() -> usize {
+    COUNTER.fetch_add(1, Ordering::SeqCst)
+}
+
+async fn get_todo_infos(
+    _claims: Claims,
+    Json(_request): Json<ProtectedRequest>,
+    state: Extension<TodoStrore>,
+) -> Result<Json<Vec<Todo>>, MyError> {
+    Ok(Json(state.todos.lock().unwrap().clone()))
 }
 
 #[derive(Debug, Serialize, Deserialize)]
