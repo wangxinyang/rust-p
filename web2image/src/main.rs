@@ -6,4 +6,5 @@ fn main() {
     save_screen_shot(args.url.as_str(), args.output.to_str().unwrap()).unwrap();
     // generated qrcode png file
     generate_qr_code(args.url.as_str(), args.output.to_str().unwrap()).unwrap();
+    println!("Task Done!");
 }
