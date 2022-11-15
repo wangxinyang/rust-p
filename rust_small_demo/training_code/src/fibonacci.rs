@@ -6,7 +6,7 @@ struct Fibonacci {
 }
 
 impl Fibonacci {
-    fn new(total: u8) -> Fibonacci {
+    fn _new(total: u8) -> Fibonacci {
         Fibonacci {
             a: 0,
             b: 0,

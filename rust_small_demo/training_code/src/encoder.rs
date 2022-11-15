@@ -4,17 +4,17 @@ trait Encoder {
     fn encode(&self) -> Result<Vec<u8>>;
 }
 
-struct Event<Id, Data> {
+struct _Event<Id, Data> {
     id: Id,
     data: Data,
 }
 
-impl<Id: Encoder, Data: Encoder> Event<Id, Data> {
-    fn new(id: Id, data: Data) -> Self {
+impl<Id: Encoder, Data: Encoder> _Event<Id, Data> {
+    fn _new(id: Id, data: Data) -> Self {
         Self { id, data }
     }
 
-    fn test(&self) -> Result<Vec<u8>> {
+    fn _test(&self) -> Result<Vec<u8>> {
         let mut result = self.id.encode()?;
         result.append(&mut self.data.encode()?);
         Ok(result)

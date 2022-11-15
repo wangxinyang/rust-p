@@ -1,36 +1,36 @@
 use tokio::sync::{Semaphore, SemaphorePermit};
 
 struct Museum {
-    tickets_num: Semaphore,
+    _tickets_num: Semaphore,
 }
 
 #[derive(Debug)]
 struct Ticket<'a> {
-    permit: SemaphorePermit<'a>,
+    _permit: SemaphorePermit<'a>,
 }
 
 impl<'a> Ticket<'a> {
-    fn new(permit: SemaphorePermit<'a>) -> Self {
-        Self { permit }
+    fn _new(permit: SemaphorePermit<'a>) -> Self {
+        Self { _permit: permit }
     }
 }
 
 impl Museum {
-    fn new(totals: usize) -> Self {
+    fn _new(totals: usize) -> Self {
         Self {
-            tickets_num: Semaphore::new(totals),
+            _tickets_num: Semaphore::new(totals),
         }
     }
 
-    fn get_tickets(&self) -> Option<Ticket> {
-        match self.tickets_num.try_acquire() {
-            Ok(permit) => Some(Ticket::new(permit)),
+    fn _get_tickets(&self) -> Option<Ticket> {
+        match self._tickets_num.try_acquire() {
+            Ok(permit) => Some(Ticket::_new(permit)),
             Err(_) => None,
         }
     }
 
-    fn tickets(&self) -> usize {
-        self.tickets_num.available_permits()
+    fn _tickets(&self) -> usize {
+        self._tickets_num.available_permits()
     }
 }
 
