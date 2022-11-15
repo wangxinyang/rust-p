@@ -1,0 +1,1 @@
+name is: tosei, age is: 40, gender is: 男性
