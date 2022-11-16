@@ -1,73 +1,75 @@
-#[derive(Debug)]
-struct StrSplit<'a, D> {
-    remainder: Option<&'a str>,
-    delimiter: D,
+pub trait Messenger {
+    fn send(&self, msg: &str);
 }
 
-impl<'a, D> StrSplit<'a, D> {
-    fn new(stack: &'a str, delimiter: D) -> Self {
-        Self {
-            remainder: Some(stack),
-            delimiter,
-        }
-    }
+pub struct LimitTracker<'a, T: Messenger> {
+    messenger: &'a T,
+    value: usize,
+    max: usize,
 }
 
-trait Delimiter {
-    fn find_next(&self, stack: &str) -> Option<(usize, usize)>;
-}
-
-impl<'a, D> Iterator for StrSplit<'a, D>
+impl<'a, T> LimitTracker<'a, T>
 where
-    D: Delimiter,
+    T: Messenger,
 {
-    type Item = &'a str;
+    pub fn new(messenger: &T, max: usize) -> LimitTracker<T> {
+        LimitTracker {
+            messenger,
+            value: 0,
+            max,
+        }
+    }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(remainder) = self.remainder {
-            if let Some((delimi_start, delimi_end)) = self.delimiter.find_next(remainder) {
-                let until_delimiter = &remainder[..delimi_start];
-                self.remainder = remainder.get(delimi_end..);
-                Some(until_delimiter)
-            } else {
-                self.remainder.take()
-            }
-        } else {
-            None
+    pub fn set_value(&mut self, value: usize) {
+        self.value = value;
+
+        let percentage_of_max = self.value as f64 / self.max as f64;
+
+        if percentage_of_max >= 1.0 {
+            self.messenger.send("Error: You are over your quota!");
+        } else if percentage_of_max >= 0.9 {
+            self.messenger
+                .send("Urgent warning: You've used up over 90% of your quota!");
+        } else if percentage_of_max >= 0.75 {
+            self.messenger
+                .send("Warning: You've used up over 75% of your quota!");
         }
     }
 }
 
-impl Delimiter for &str {
-    fn find_next(&self, s: &str) -> Option<(usize, usize)> {
-        s.find(self).map(|idx| (idx, idx + self.len()))
+#[cfg(test)]
+mod tests {
+    use std::cell::RefCell;
+
+    use super::*;
+
+    struct MockMessenger {
+        sent_messages: RefCell<Vec<String>>,
+    }
+
+    impl MockMessenger {
+        fn new() -> MockMessenger {
+            MockMessenger {
+                sent_messages: RefCell::new(vec![]),
+            }
+        }
+    }
+
+    impl Messenger for MockMessenger {
+        fn send(&self, message: &str) {
+            self.sent_messages.borrow_mut().push(String::from(message));
+        }
+    }
+
+    #[test]
+    fn it_sends_an_over_75_percent_warning_message() {
+        let mock_messenger = MockMessenger::new();
+        let mut limit_tracker = LimitTracker::new(&mock_messenger, 100);
+
+        limit_tracker.set_value(80);
+
+        assert_eq!(mock_messenger.sent_messages.borrow().len(), 1);
     }
 }
 
-impl Delimiter for char {
-    fn find_next(&self, s: &str) -> Option<(usize, usize)> {
-        s.char_indices()
-            .find(|(_, c)| c == self)
-            .map(|(start, _)| (start, start + self.len_utf8()))
-    }
-}
-
-fn until_char(s: &str, c: char) -> &str {
-    StrSplit::new(s, c)
-        .next()
-        .expect("StrSplit always gives at least one result")
-}
-
-fn main() {
-    let stack = "a b c d e";
-    let letters = StrSplit::new(stack, " ");
-    // let letters = StrSplit::new(stack, " ").collect::<Vec<&str>>();
-    // assert_eq!(letters, vec!["a", "b", "c", "d", "e"]);
-    assert!(letters.eq(vec!["a", "b", "c", "d", "e"].into_iter()));
-
-    let stack = "a b c d ";
-    let letters: Vec<_> = StrSplit::new(stack, " ").collect();
-    assert_eq!(letters, vec!["a", "b", "c", "d", ""]);
-
-    assert_eq!(until_char("hello world", 'o'), "hell");
-}
+fn main() {}
