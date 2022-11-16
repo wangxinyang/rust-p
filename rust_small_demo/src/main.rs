@@ -1,50 +1,73 @@
-use tokio::sync::{Semaphore, SemaphorePermit};
-
-struct Museum {
-    ticket: Semaphore,
+#[derive(Debug)]
+struct StrSplit<'a, D> {
+    remainder: Option<&'a str>,
+    delimiter: D,
 }
 
-#[allow(dead_code)]
-struct Ticket<'a> {
-    permit: SemaphorePermit<'a>,
-}
-
-impl<'a> Drop for Ticket<'a> {
-    fn drop(&mut self) {
-        println!("Ticket freed");
-    }
-}
-
-impl Museum {
-    fn new(count: usize) -> Self {
+impl<'a, D> StrSplit<'a, D> {
+    fn new(stack: &'a str, delimiter: D) -> Self {
         Self {
-            ticket: Semaphore::new(count),
+            remainder: Some(stack),
+            delimiter,
         }
     }
+}
 
-    fn get_ticket(&self) -> Option<Ticket<'_>> {
-        match self.ticket.try_acquire() {
-            Ok(permit) => Some(Ticket { permit }),
-            Err(_) => None,
+trait Delimiter {
+    fn find_next(&self, stack: &str) -> Option<(usize, usize)>;
+}
+
+impl<'a, D> Iterator for StrSplit<'a, D>
+where
+    D: Delimiter,
+{
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(remainder) = self.remainder {
+            if let Some((delimi_start, delimi_end)) = self.delimiter.find_next(remainder) {
+                let until_delimiter = &remainder[..delimi_start];
+                self.remainder = remainder.get(delimi_end..);
+                Some(until_delimiter)
+            } else {
+                self.remainder.take()
+            }
+        } else {
+            None
         }
     }
+}
 
-    fn ticket(&self) -> usize {
-        self.ticket.available_permits()
+impl Delimiter for &str {
+    fn find_next(&self, s: &str) -> Option<(usize, usize)> {
+        s.find(self).map(|idx| (idx, idx + self.len()))
     }
+}
+
+impl Delimiter for char {
+    fn find_next(&self, s: &str) -> Option<(usize, usize)> {
+        s.char_indices()
+            .find(|(_, c)| c == self)
+            .map(|(start, _)| (start, start + self.len_utf8()))
+    }
+}
+
+fn until_char(s: &str, c: char) -> &str {
+    StrSplit::new(s, c)
+        .next()
+        .expect("StrSplit always gives at least one result")
 }
 
 fn main() {
-    let museum = Museum::new(50);
-    let _ticket = museum.get_ticket().unwrap();
-    assert_eq!(49, museum.ticket());
+    let stack = "a b c d e";
+    let letters = StrSplit::new(stack, " ");
+    // let letters = StrSplit::new(stack, " ").collect::<Vec<&str>>();
+    // assert_eq!(letters, vec!["a", "b", "c", "d", "e"]);
+    assert!(letters.eq(vec!["a", "b", "c", "d", "e"].into_iter()));
 
-    let _tickets: Vec<Ticket> = (0..49).map(|_| museum.get_ticket().unwrap()).collect();
-    assert_eq!(0, museum.ticket());
-    {
-        assert!(museum.get_ticket().is_none());
-        drop(_ticket);
-        assert_eq!(1, museum.ticket());
-    }
-    println!("-------");
+    let stack = "a b c d ";
+    let letters: Vec<_> = StrSplit::new(stack, " ").collect();
+    assert_eq!(letters, vec!["a", "b", "c", "d", ""]);
+
+    assert_eq!(until_char("hello world", 'o'), "hell");
 }
