@@ -1,0 +1,15 @@
+// File copied from MacOS X
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'yourprogram'",
+      "program": "${workspaceRoot}/target/debug/examples/runtime",
+      "args": [],
+      "cwd": "${workspaceRoot}",
+      "console": "externalTerminal"
+    }
+  ]
+}

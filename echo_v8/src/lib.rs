@@ -1,7 +1,7 @@
 mod state;
 
 use state::JsRuntimeState;
-use v8::{CreateParams, Isolate, OwnedIsolate, V8};
+use v8::{CreateParams, HandleScope, Isolate, Local, OwnedIsolate, TryCatch, Value, V8};
 
 #[derive(Default)]
 pub struct JsRuntimeParams {
@@ -31,10 +31,15 @@ impl JsRuntime {
     }
 
     pub fn execute_script(
-        &self,
+        &mut self,
         source: impl AsRef<str>,
     ) -> Result<serde_json::Value, serde_json::Value> {
-        todo!()
+        let context = JsRuntimeState::get_context(&mut self.isolate);
+        let handle_scope = &mut HandleScope::with_context(&mut self.isolate, context);
+        match execute_script(handle_scope, source) {
+            Ok(input) => Ok(serde_v8::from_v8(handle_scope, input).unwrap()),
+            Err(err) => Err(serde_v8::from_v8(handle_scope, err).unwrap()),
+        }
     }
 
     fn init_isolate(mut isolate: OwnedIsolate) -> Self {
@@ -42,4 +47,20 @@ impl JsRuntime {
         isolate.set_slot(state);
         JsRuntime { isolate }
     }
+}
+
+fn execute_script<'a>(
+    scope: &mut HandleScope<'a>,
+    code: impl AsRef<str>,
+) -> Result<Local<'a, Value>, Local<'a, Value>> {
+    let scope = &mut TryCatch::new(scope);
+    let source = v8::String::new(scope, code.as_ref()).unwrap();
+    println!("source {:?}", source);
+    let res = v8::Script::compile(scope, source, None);
+    println!("scope {:?}", scope);
+    println!("res {:?}", res);
+    let result = res.unwrap().run(scope).unwrap();
+    // .and_then(|script| script.run(scope))
+
+    Ok(result)
 }
