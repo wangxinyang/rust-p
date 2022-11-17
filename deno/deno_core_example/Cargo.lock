@@ -83,6 +83,7 @@ name = "deno_core_example"
 version = "0.1.0"
 dependencies = [
  "deno_core",
+ "serde_v8",
  "tokio",
 ]
 
