@@ -25,6 +25,19 @@ where
     }
 }
 
+impl<O> DoubleEndedIterator for Flatten<O>
+where
+    O: DoubleEndedIterator,
+    O::Item: IntoIterator,
+    <O::Item as IntoIterator>::IntoIter: DoubleEndedIterator,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.outer
+            .next_back()
+            .and_then(|inner| inner.into_iter().next_back())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -55,5 +68,25 @@ mod tests {
     #[test]
     fn two() {
         assert_eq!(flatten(vec![vec!["a"], vec!["b"]].into_iter()).count(), 2);
+    }
+
+    #[test]
+    fn reverse() {
+        assert_eq!(
+            flatten(std::iter::once(vec!["a", "b"]))
+                .rev()
+                .collect::<Vec<_>>(),
+            vec!["b"]
+        );
+    }
+
+    #[test]
+    fn reverse_wide() {
+        assert_eq!(
+            flatten(vec![vec!["a"], vec!["b"]].into_iter())
+                .rev()
+                .collect::<Vec<_>>(),
+            vec!["b", "a"]
+        );
     }
 }
