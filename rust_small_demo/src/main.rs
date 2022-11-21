@@ -1,75 +1,52 @@
-pub trait Messenger {
-    fn send(&self, msg: &str);
+fn main() {
+    let str1 = "tosei";
+    // because impl ToOwned for str
+    // Owned = String
+    let str2 = str1.to_owned();
+    print_type_of(&str2);
+    println!("str2 is: {:?}", str2);
+
+    // &str -> String
+    let str = str1.to_string();
+    print_type_of(&str);
+    println!("str is: {:?}", str);
+
+    // &str -> bytes slice
+    let str1_bytes = str1.as_bytes();
+    print_type_of(&str1_bytes);
+    println!("str1_bytes is: {:?}", str1_bytes);
+
+    // bytes slice -> bytes array
+    // let length = str1_bytes.len();
+    // attempt to use a non-constant value in a constant non-constant value
+    // let str1_num: [u8; length] = str1_bytes.try_into().unwrap();
+    // array length must be the same as the slice length
+    let str1_num: [u8; 5] = str1_bytes.try_into().unwrap();
+    print_type_of(&str1_num);
+    println!("str1_num is: {:?}", str1_num);
+
+    // bytes slice -> Vec
+    // because impl ToOwned for [T], Owned = Vec<T>
+    let vec_from_slice = str1_bytes.to_owned();
+    print_type_of(&vec_from_slice);
+    println!("vec_from_slice is {:?}", vec_from_slice);
+
+    // bytes slice -> Vec
+    let str1_vec = str1_bytes.to_vec();
+    print_type_of(&str1_vec);
+    println!("str1_vec is {:?}", str1_vec);
+
+    // Vec -> String
+    let str_from_vec = String::from_utf8(str1_vec).unwrap();
+    print_type_of(&str_from_vec);
+    println!("str_from_vec is {:?}", str_from_vec);
+
+    // String -> Vec
+    let vec_from_string = str_from_vec.into_bytes();
+    print_type_of(&vec_from_string);
+    println!("str_from_vec is {:?}", vec_from_string);
 }
 
-pub struct LimitTracker<'a, T: Messenger> {
-    messenger: &'a T,
-    value: usize,
-    max: usize,
+fn print_type_of<T>(_: &T) {
+    println!("type is = {}", std::any::type_name::<T>())
 }
-
-impl<'a, T> LimitTracker<'a, T>
-where
-    T: Messenger,
-{
-    pub fn new(messenger: &T, max: usize) -> LimitTracker<T> {
-        LimitTracker {
-            messenger,
-            value: 0,
-            max,
-        }
-    }
-
-    pub fn set_value(&mut self, value: usize) {
-        self.value = value;
-
-        let percentage_of_max = self.value as f64 / self.max as f64;
-
-        if percentage_of_max >= 1.0 {
-            self.messenger.send("Error: You are over your quota!");
-        } else if percentage_of_max >= 0.9 {
-            self.messenger
-                .send("Urgent warning: You've used up over 90% of your quota!");
-        } else if percentage_of_max >= 0.75 {
-            self.messenger
-                .send("Warning: You've used up over 75% of your quota!");
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::cell::RefCell;
-
-    use super::*;
-
-    struct MockMessenger {
-        sent_messages: RefCell<Vec<String>>,
-    }
-
-    impl MockMessenger {
-        fn new() -> MockMessenger {
-            MockMessenger {
-                sent_messages: RefCell::new(vec![]),
-            }
-        }
-    }
-
-    impl Messenger for MockMessenger {
-        fn send(&self, message: &str) {
-            self.sent_messages.borrow_mut().push(String::from(message));
-        }
-    }
-
-    #[test]
-    fn it_sends_an_over_75_percent_warning_message() {
-        let mock_messenger = MockMessenger::new();
-        let mut limit_tracker = LimitTracker::new(&mock_messenger, 100);
-
-        limit_tracker.set_value(80);
-
-        assert_eq!(mock_messenger.sent_messages.borrow().len(), 1);
-    }
-}
-
-fn main() {}
