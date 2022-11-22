@@ -44,7 +44,13 @@ fn main() {
     // String -> Vec
     let vec_from_string = str_from_vec.into_bytes();
     print_type_of(&vec_from_string);
-    println!("str_from_vec is {:?}", vec_from_string);
+    println!("vec_from_string is {:?}", vec_from_string);
+
+    // bytes slice -> u32
+    let bytes_arr: [u8; 4] = [12, 32, 44, 55];
+    let bytes_u32 = u32::from_be_bytes(bytes_arr);
+    print_type_of(&bytes_u32);
+    println!("bytes_u32 is {:?}", bytes_u32);
 }
 
 fn print_type_of<T>(_: &T) {
