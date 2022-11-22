@@ -1,19 +1,10 @@
-[package]
-name = "guessing_game"
-version = "0.1.0"
-edition = "2021"
+[workspace]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-rand = "0.8.3"
-futures = "0.3.21"
-serde ={ version = "1.0.143", features =["derive"]}
-serde_json = "1.0.85"
-getaver = {path="./rust_ool/getaver"}
-training_code = {path="./training_code"}
-macro_define_crate ={path="./macro_define_crate"}
-xlsxwriter = "0.4.0"
-anyhow = "1.0.65"
-calc_engine = "0.4.1"
-tokio = { version = "1.21.2", features = ["full"] }
+members = [
+    "practice_coding/small_demo",
+    "practice_coding/macro_define_crate",
+    "practice_coding/getaver",
+    "practice_coding/why_async",
+    "practice_coding/training_code",
+    "practice_coding/kv"
+]

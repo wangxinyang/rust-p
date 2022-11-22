@@ -1,1 +1,0 @@
-/Users/tosei/workspace/practice/rust/rust_guessing_game/rust_ool/target/debug/main: /Users/tosei/workspace/practice/rust/rust_guessing_game/rust_ool/getaver/src/lib.rs /Users/tosei/workspace/practice/rust/rust_guessing_game/rust_ool/main/src/main.rs
