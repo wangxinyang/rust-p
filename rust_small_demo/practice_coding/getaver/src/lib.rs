@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct AverCollect {
     list: Vec<i32>,
     average: f64,
