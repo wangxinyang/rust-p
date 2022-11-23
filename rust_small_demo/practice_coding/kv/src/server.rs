@@ -1,10 +1,13 @@
 mod pb;
 
-use crate::pb::request::Command;
-use anyhow::{Ok, Result};
-use dashmap::DashMap;
-use futures::StreamExt;
+use std::sync::Arc;
+
 use pb::*;
+
+use crate::pb::request::Command;
+use anyhow::Result;
+use dashmap::DashMap;
+use futures::{SinkExt, StreamExt};
 use tokio::net::TcpListener;
 use tokio_util::codec::LengthDelimitedCodec;
 use tracing::info;
@@ -35,31 +38,37 @@ async fn main() -> Result<()> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    let state = ServerState::new();
+    let state = Arc::new(ServerState::new());
     let addr = "0.0.0.0:3001";
     let listener = TcpListener::bind(addr).await?;
     info!("Listen on {}", addr);
 
-    // loop {
-    let (socket, addr) = listener.accept().await?;
-    info!("Accepted connection from {}", addr);
+    loop {
+        let (socket, addr) = listener.accept().await?;
+        info!("Accepted connection from {}", addr);
+        let shared = state.clone();
+        tokio::spawn(async move {
+            let mut stream = LengthDelimitedCodec::builder()
+                .length_field_length(2)
+                .new_framed(socket);
+            while let Some(std::result::Result::Ok(buf)) = stream.next().await {
+                let msg: Request = buf.try_into()?;
+                info!("Accepted msg is: {:?}", msg);
 
-    tokio::spawn(async move {
-        let mut stream = LengthDelimitedCodec::builder()
-            .length_field_length(2)
-            .new_framed(socket);
-        while let Some(std::result::Result::Ok(buf)) = stream.next().await {
-            let msg: Request = buf.try_into().unwrap();
-            info!("Accepted msg is: {:?}", msg);
-            match msg.command {
-                Some(Command::Get(req)) => {}
-                Some(Command::Put(req)) => {}
-                None => {}
+                let response = match msg.command {
+                    Some(Command::Get(RequestGet { key })) => match shared.store.get(&key) {
+                        Some(v) => Response::new(key, String::from_utf8(v.value().to_vec())?),
+                        None => Response::not_found(key),
+                    },
+                    Some(Command::Put(RequestPut { key, value })) => {
+                        shared.store.insert(key.clone(), value.clone().into_bytes());
+                        Response::new(key, value.clone())
+                    }
+                    None => unimplemented!("Not implemented"),
+                };
+                stream.send(response.into()).await?;
             }
-        }
-        // Ok::<(), anyhow::Error>(())
-    });
-    // }
-
-    Ok(())
+            std::result::Result::Ok::<(), anyhow::Error>(())
+        });
+    }
 }
