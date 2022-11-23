@@ -1,14 +1,14 @@
 #[derive(Eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Request {
-    #[prost(oneof = "request::Message", tags = "1, 2")]
-    pub message: ::core::option::Option<request::Message>,
+    #[prost(oneof = "request::Command", tags = "1, 2")]
+    pub command: ::core::option::Option<request::Command>,
 }
 /// Nested message and enum types in `Request`.
 pub mod request {
     #[derive(Eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Message {
+    pub enum Command {
         #[prost(message, tag = "1")]
         Get(super::RequestGet),
         #[prost(message, tag = "2")]

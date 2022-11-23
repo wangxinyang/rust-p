@@ -1,5 +1,6 @@
 mod pb;
 
+use crate::pb::request::Command;
 use anyhow::{Ok, Result};
 use dashmap::DashMap;
 use futures::StreamExt;
@@ -39,19 +40,26 @@ async fn main() -> Result<()> {
     let listener = TcpListener::bind(addr).await?;
     info!("Listen on {}", addr);
 
-    loop {
-        let (socket, addr) = listener.accept().await?;
-        info!("Accepted connection from {}", addr);
+    // loop {
+    let (socket, addr) = listener.accept().await?;
+    info!("Accepted connection from {}", addr);
 
-        tokio::spawn(async move {
-            let mut stream = LengthDelimitedCodec::builder()
-                .length_field_length(2)
-                .new_framed(socket);
-            while let Some(std::result::Result::Ok(buf)) = stream.next().await {
-                let _msg: Request = buf.try_into().unwrap();
+    tokio::spawn(async move {
+        let mut stream = LengthDelimitedCodec::builder()
+            .length_field_length(2)
+            .new_framed(socket);
+        while let Some(std::result::Result::Ok(buf)) = stream.next().await {
+            let msg: Request = buf.try_into().unwrap();
+            info!("Accepted msg is: {:?}", msg);
+            match msg.command {
+                Some(Command::Get(req)) => {}
+                Some(Command::Put(req)) => {}
+                None => {}
             }
-        });
-    }
+        }
+        // Ok::<(), anyhow::Error>(())
+    });
+    // }
 
     Ok(())
 }
