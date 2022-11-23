@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
                     },
                     Some(Command::Put(RequestPut { key, value })) => {
                         shared.store.insert(key.clone(), value.clone().into_bytes());
-                        Response::new(key, value.clone())
+                        Response::new(key, value)
                     }
                     None => unimplemented!("Not implemented"),
                 };
