@@ -1,20 +1,10 @@
-use std::future::Future;
+use std::fs;
 
-#[allow(dead_code, unused_variables)]
 fn main() {
-    println!("Hello, world!");
-
-    let x = foo1();
+    let path = "/tmp/dat";
+    println!("{}", read_file(path));
 }
 
-async fn foo1() -> usize {
-    println!("foo");
-    0
-}
-
-fn foo2() -> impl Future<Output = usize> {
-    async {
-        println!("foo");
-        0
-    }
+fn read_file(path: &str) -> String {
+    fs::read_to_string(path).unwrap()
 }
