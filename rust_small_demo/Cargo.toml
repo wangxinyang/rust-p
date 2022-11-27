@@ -6,5 +6,7 @@ members = [
     "practice_coding/getaver",
     "practice_coding/why_async",
     "practice_coding/training_code",
-    "practice_coding/kv"
+    "practice_coding/kv",
+    "practice_coding/patience",
+    "practice_coding/async_book_example",
 ]
