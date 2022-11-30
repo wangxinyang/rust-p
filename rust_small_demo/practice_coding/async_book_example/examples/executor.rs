@@ -61,7 +61,8 @@ impl Executor {
             if let Some(mut future) = future_slot.take() {
                 let waker = waker_ref(&task);
                 let context = &mut Context::from_waker(&waker);
-
+                // 这里的poll方法是谁实现的呢? 就目前所知是编译时自动生成的 实现了Future的生成器
+                // poll方法是Runtime去调用的
                 if future.as_mut().poll(context).is_pending() {
                     *future_slot = Some(future);
                 }
