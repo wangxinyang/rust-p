@@ -1,5 +1,7 @@
 [workspace]
 
+resolver = "2" # Important! wgpu/Bevy needs this!
+
 members = [
     "practice_coding/small_demo",
     "practice_coding/macro_define_crate",
@@ -9,4 +11,5 @@ members = [
     "practice_coding/kv",
     "practice_coding/patience",
     "practice_coding/async_book_example",
+    "practice_coding/bevy_example"
 ]
