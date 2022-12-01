@@ -17,9 +17,9 @@ impl Test {
     }
 
     fn init(self: Pin<&mut Self>) {
-        let self_ref = &self.a;
-        let this = unsafe { self.get_unchecked_mut() };
-        this.b = self_ref;
+        // let self_ref = &self.a;
+        // let this = unsafe { self.get_unchecked_mut() };
+        // this.b = self_ref;
     }
 
     fn a(self: Pin<&Self>) -> &str {
@@ -44,7 +44,7 @@ fn main() {
         Test::a(test1.as_ref()),
         Test::b(test1.as_ref())
     );
-    std::mem::swap(test1.get_mut(), test2.get_mut());
+    // std::mem::swap(test1.get_mut(), test2.get_mut());
     println!(
         "a: {}, b: {}",
         Test::a(test2.as_ref()),
