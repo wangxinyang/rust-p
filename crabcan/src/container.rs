@@ -5,8 +5,8 @@ use std::os::unix::prelude::RawFd;
 use tracing::{debug, error};
 
 pub struct Container {
-    config: ContainerOpts,
-    sockets: (RawFd, RawFd),
+    pub config: ContainerOpts,
+    pub sockets: (RawFd, RawFd),
 }
 
 impl Container {

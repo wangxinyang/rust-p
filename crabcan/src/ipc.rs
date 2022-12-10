@@ -15,7 +15,7 @@ pub fn generate_socketpair() -> Result<(RawFd, RawFd), Errcode> {
     }
 }
 
-pub fn send_boolean(fd: RawFd, boolean: bool) -> Result<(), Errcode> {
+pub fn _send_boolean(fd: RawFd, boolean: bool) -> Result<(), Errcode> {
     let data: [u8; 1] = [boolean.into()];
     if let Err(e) = send(fd, &data, MsgFlags::empty()) {
         error!("Cannot send boolean through socket: {:?}", e);
@@ -24,7 +24,7 @@ pub fn send_boolean(fd: RawFd, boolean: bool) -> Result<(), Errcode> {
     Ok(())
 }
 
-pub fn recv_boolean(fd: RawFd) -> Result<bool, Errcode> {
+pub fn _recv_boolean(fd: RawFd) -> Result<bool, Errcode> {
     let mut data: [u8; 1] = [0];
     if let Err(e) = recv(fd, &mut data, MsgFlags::empty()) {
         error!("Cannot receive boolean from socket: {:?}", e);
